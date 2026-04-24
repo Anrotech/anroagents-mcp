@@ -37,10 +37,18 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          # Node 24 ships with npm 11.x. Trusted Publishing needs npm >=11.5.
           # NOTE: no registry-url — setup-node would inject _authToken=${NODE_AUTH_TOKEN}
           # into .npmrc; with no secret that fails auth before OIDC kicks in.
           node-version: '24'
+
+      - name: Upgrade npm for Trusted Publishing (OIDC support in npm >=11.5)
+        # setup-node on runners ships npm 10.x by default. Upgrading via corepack
+        # avoids the 'Cannot find module promise-retry' issue you get with a
+        # plain `npm install -g npm@latest`.
+        run: |
+          corepack enable
+          corepack prepare npm@11.5.1 --activate
+          npm --version
 
       - name: Install
         run: npm ci
