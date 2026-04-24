@@ -37,14 +37,10 @@ jobs:
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: '22'
-          # NOTE: no registry-url here. If set, setup-node injects
-          # _authToken=${NODE_AUTH_TOKEN} into .npmrc, and npm then fails
-          # auth with an empty token before trying OIDC. Trusted Publishing
-          # works cleanly only when .npmrc has no _authToken line at all.
-
-      - name: Upgrade npm to 11.x (Trusted Publishing requires >=11.5)
-        run: npm install -g npm@latest
+          # Node 24 ships with npm 11.x. Trusted Publishing needs npm >=11.5.
+          # NOTE: no registry-url — setup-node would inject _authToken=${NODE_AUTH_TOKEN}
+          # into .npmrc; with no secret that fails auth before OIDC kicks in.
+          node-version: '24'
 
       - name: Install
         run: npm ci
