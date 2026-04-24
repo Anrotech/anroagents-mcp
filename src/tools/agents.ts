@@ -46,6 +46,30 @@ const proactiveTriggersField = z.array(proactiveTriggerSchema)
   .describe('Rules that auto-open the widget on visitor behavior. Max 10 per agent.');
 
 // Lead qualification config — mirrors api/src/lib/qualification.ts.
+// Outbound follow-up email config — mirrors api/src/lib/followup.ts sanitizer.
+const followupSchema = z.object({
+  enabled: z.boolean(),
+  provider: z.enum(['gmail', 'microsoft'])
+    .describe('Currently only gmail is supported server-side; microsoft is reserved.'),
+  delayHours: z.number().int().min(1).max(168)
+    .describe('Hours to wait after conversation ends before sending (1..168 = up to 1 week)'),
+  maxPerConversation: z.number().int().min(1).max(5)
+    .describe('Max follow-ups per conversation. 1 recommended; >1 reserved for drip.'),
+  subject: z.string().max(200)
+    .describe('Subject line. Supports {{visitorName}}, {{businessName}} placeholders.'),
+  body: z.string().max(5000)
+    .describe('Markdown body. Placeholders: {{visitorName}}, {{businessName}}, {{bookingUrl}}, {{ai_opening}}. Keep plain — rich HTML lands in Promotions.'),
+  signature: z.string().max(1000).optional(),
+  aiPersonalizedOpening: z.boolean()
+    .describe('Whether the LLM should generate a 1-2 sentence personalized opening from collected qualification fields.'),
+  triggerConditions: z.object({
+    onlyIfEmailCollected: z.boolean(),
+    skipIfMeetingBooked: z.boolean(),
+    onlyIfQualified: z.boolean(),
+    skipIfDealCreated: z.boolean(),
+  }),
+}).optional().describe('Outbound follow-up email. Sent from the owner\'s connected Gmail so it lands in Primary inbox. Requires visitor opt-in checkbox + gmailConnection on owner.');
+
 const qualificationSchema = z.object({
   enabled: z.boolean(),
   framework: z.enum(['bant', 'meddic', 'custom']),
@@ -137,6 +161,7 @@ export function registerAgentTools(server: McpServer, client: AnroAgentsClient) 
       })).optional().describe('Frequently asked questions'),
       proactiveTriggers: proactiveTriggersField,
       qualification: qualificationSchema,
+      followup: followupSchema,
     },
     async (params) => {
       const result = await client.createAgent(params);
@@ -179,6 +204,7 @@ export function registerAgentTools(server: McpServer, client: AnroAgentsClient) 
       })).optional(),
       proactiveTriggers: proactiveTriggersField,
       qualification: qualificationSchema,
+      followup: followupSchema,
     },
     async ({ agentId, ...updates }) => {
       const result = await client.updateAgent(agentId, updates);
