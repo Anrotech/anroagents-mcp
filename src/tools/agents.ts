@@ -2,6 +2,49 @@ import { z } from 'zod';
 import type { McpServer } from '@modelcontextprotocol/sdk/server/mcp.js';
 import type { AnroAgentsClient } from '../api-client.js';
 
+// Proactive trigger — rule that auto-opens the widget on visitor behavior.
+// Mirrors the server validator in api/src/lib/triggers.ts. Server has final word.
+const proactiveTriggerSchema = z.object({
+  id: z.string().optional().describe('Optional. Server assigns one if omitted.'),
+  enabled: z.boolean(),
+  type: z.enum([
+    'time_on_page',
+    'url_match',
+    'exit_intent',
+    'returning_visitor',
+    'scroll_depth',
+    'utm_match',
+    'referrer_match',
+    'idle',
+  ]),
+  priority: z.number().int().min(0).max(100).describe('Higher wins when multiple triggers fire at once.'),
+  frequency: z.enum(['once_per_session', 'once_per_visitor', 'always']),
+  device: z.enum(['all', 'desktop', 'mobile']),
+  action: z.enum(['open_widget', 'show_greeting_bubble']),
+  cooldownSeconds: z.number().int().min(60).max(86400).optional().describe('Only for frequency=always.'),
+  conditions: z.object({
+    urlPattern: z.string().optional().describe('Glob: * any, ? one char. Required for url_match.'),
+    delaySeconds: z.number().int().optional().describe('1..3600 for time_on_page, 5..3600 for idle.'),
+    minVisits: z.number().int().min(2).max(100).optional().describe('For returning_visitor.'),
+    scrollPercent: z.number().int().min(1).max(100).optional().describe('For scroll_depth.'),
+    utm: z.object({
+      source: z.string().optional(),
+      medium: z.string().optional(),
+      campaign: z.string().optional(),
+    }).optional().describe('At least one field required for utm_match.'),
+    referrerPattern: z.string().optional().describe('Glob against referrer hostname. Required for referrer_match.'),
+  }),
+  greeting: z.union([
+    z.string(),
+    z.record(z.string(), z.string()),
+  ]).optional().describe('Custom greeting shown when this trigger fires. String or {lang: text} map.'),
+});
+
+const proactiveTriggersField = z.array(proactiveTriggerSchema)
+  .max(10)
+  .optional()
+  .describe('Rules that auto-open the widget on visitor behavior. Max 10 per agent.');
+
 export function registerAgentTools(server: McpServer, client: AnroAgentsClient) {
 
   server.tool(
@@ -70,6 +113,7 @@ export function registerAgentTools(server: McpServer, client: AnroAgentsClient) 
         question: z.string(),
         answer: z.string(),
       })).optional().describe('Frequently asked questions'),
+      proactiveTriggers: proactiveTriggersField,
     },
     async (params) => {
       const result = await client.createAgent(params);
@@ -110,6 +154,7 @@ export function registerAgentTools(server: McpServer, client: AnroAgentsClient) 
         question: z.string(),
         answer: z.string(),
       })).optional(),
+      proactiveTriggers: proactiveTriggersField,
     },
     async ({ agentId, ...updates }) => {
       const result = await client.updateAgent(agentId, updates);
