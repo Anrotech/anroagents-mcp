@@ -45,6 +45,28 @@ const proactiveTriggersField = z.array(proactiveTriggerSchema)
   .optional()
   .describe('Rules that auto-open the widget on visitor behavior. Max 10 per agent.');
 
+// Lead qualification config — mirrors api/src/lib/qualification.ts.
+const qualificationSchema = z.object({
+  enabled: z.boolean(),
+  framework: z.enum(['bant', 'meddic', 'custom']),
+  completionMode: z.enum(['soft', 'persistent', 'strict'])
+    .describe('soft = opportunistic, persistent = circles back every 2-3 turns, strict = blocks off-topic until required fields are answered'),
+  qualifyThreshold: z.number().int().min(1).max(100)
+    .describe('Minimum normalized score for the lead.qualified webhook to fire'),
+  fields: z.array(z.object({
+    id: z.string().optional(),
+    key: z.string().regex(/^[a-z][a-z0-9_]*$/, 'lowercase, snake_case, 1-40 chars'),
+    label: z.string().max(80),
+    hint: z.string().max(400).describe('Free-form instruction handed to the LLM: what to extract, how to ask.'),
+    required: z.boolean(),
+    weight: z.number().int().min(1).max(100),
+    buckets: z.array(z.object({
+      label: z.string().max(60),
+      score: z.number().int().min(0).max(100),
+    })).max(10).optional(),
+  })).max(12),
+}).optional().describe('Structured lead qualification (BANT/MEDDIC-style). AI weaves questions into chat, classifier extracts answers, score fires a webhook on threshold crossing.');
+
 export function registerAgentTools(server: McpServer, client: AnroAgentsClient) {
 
   server.tool(
@@ -114,6 +136,7 @@ export function registerAgentTools(server: McpServer, client: AnroAgentsClient) 
         answer: z.string(),
       })).optional().describe('Frequently asked questions'),
       proactiveTriggers: proactiveTriggersField,
+      qualification: qualificationSchema,
     },
     async (params) => {
       const result = await client.createAgent(params);
@@ -155,6 +178,7 @@ export function registerAgentTools(server: McpServer, client: AnroAgentsClient) 
         answer: z.string(),
       })).optional(),
       proactiveTriggers: proactiveTriggersField,
+      qualification: qualificationSchema,
     },
     async ({ agentId, ...updates }) => {
       const result = await client.updateAgent(agentId, updates);
