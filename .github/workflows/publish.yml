@@ -38,8 +38,13 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: '22'
-          # Needed for provenance + Trusted Publishing
-          registry-url: 'https://registry.npmjs.org'
+          # NOTE: no registry-url here. If set, setup-node injects
+          # _authToken=${NODE_AUTH_TOKEN} into .npmrc, and npm then fails
+          # auth with an empty token before trying OIDC. Trusted Publishing
+          # works cleanly only when .npmrc has no _authToken line at all.
+
+      - name: Upgrade npm to 11.x (Trusted Publishing requires >=11.5)
+        run: npm install -g npm@latest
 
       - name: Install
         run: npm ci
