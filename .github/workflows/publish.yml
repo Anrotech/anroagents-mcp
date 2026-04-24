@@ -56,7 +56,8 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Verify tag matches package.json version
+      - name: Verify tag matches package.json version (skipped on workflow_dispatch)
+        if: github.event_name == 'push'
         run: |
           TAG="${GITHUB_REF#refs/tags/v}"
           PKG=$(node -p "require('./package.json').version")
