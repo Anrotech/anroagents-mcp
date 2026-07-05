@@ -66,4 +66,21 @@ export class AnroAgentsClient {
   async regenerateKey(agentId: string) {
     return this.request<{ apiKey: string }>('POST', `/agents/${agentId}/regenerate-key`);
   }
+
+  /** Ask the API for a presigned S3 URL to upload an asset (e.g. a logo). */
+  async createUpload(data: { fileName: string; contentType: string; fileSize?: number }) {
+    return this.request<{ uploadUrl: string; key: string }>('POST', '/uploads', data);
+  }
+
+  /** PUT raw bytes to a presigned S3 URL. Content-Type must match what was presigned. */
+  async uploadToPresignedUrl(uploadUrl: string, bytes: Uint8Array, contentType: string): Promise<void> {
+    const response = await fetch(uploadUrl, {
+      method: 'PUT',
+      headers: { 'Content-Type': contentType },
+      body: bytes,
+    });
+    if (!response.ok) {
+      throw new Error(`Upload failed: HTTP ${response.status} ${response.statusText}`);
+    }
+  }
 }

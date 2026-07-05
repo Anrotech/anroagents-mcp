@@ -16,6 +16,7 @@ MCP (Model Context Protocol) server for managing AI agents on the [AnroAgents](h
 | `delete-agent` | Delete a draft agent |
 | `submit-agent-for-review` | Submit agent for moderation and catalog listing |
 | `toggle-agent` | Enable or disable an active agent |
+| `set-agent-logo` | Upload a logo (local file or image URL) and attach it to an agent |
 | `get-embed-code` | Get HTML widget embed code for any website |
 | `regenerate-agent-key` | Regenerate the agent's API key |
 
@@ -212,6 +213,15 @@ Enable or disable an active agent.
 **Parameters:**
 - `agentId` (required): The agent's unique ID
 
+### set-agent-logo
+
+Upload a logo image and attach it to an agent. Provide **either** a local file or a public image URL. Accepts PNG, JPEG, WebP, or SVG up to 10 MB. The image is uploaded to secure storage and the agent is updated in one step.
+
+**Parameters:**
+- `agentId` (required): The agent's unique ID
+- `filePath` (optional): Absolute path to a local image file. Use this **or** `imageUrl`.
+- `imageUrl` (optional): Public URL of an image to fetch. Use this **or** `filePath`.
+
 ### get-embed-code
 
 Get the HTML snippet to embed the chat widget on any website.
@@ -237,6 +247,7 @@ Once configured, you can ask your AI assistant things like:
 - "Update my agent's business hours to Mon-Sat 11am-10pm"
 - "Add a FAQ to my agent: Q: Do you deliver? A: Yes, within 5 miles"
 - "What's the embed code for my Mario's Pizza agent?"
+- "Set the logo for my Mario's Pizza agent from ~/Downloads/logo.png"
 - "Disable my test agent"
 - "Delete my draft agent"
 
