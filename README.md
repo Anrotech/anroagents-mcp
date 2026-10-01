@@ -3,7 +3,9 @@
 [![npm version](https://img.shields.io/npm/v/@anroagents/mcp-server.svg)](https://www.npmjs.com/package/@anroagents/mcp-server)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 
-MCP (Model Context Protocol) server for managing AI agents on the [AnroAgents](https://anroagents.com) platform. Control your agents directly from Claude, ChatGPT, Gemini, Cursor, Windsurf, and other AI tools.
+MCP (Model Context Protocol) server for managing AI agents on the [AnroAgents](https://anroagents.com) platform. Control your agents directly from Claude, Cursor, Windsurf, Gemini CLI and other MCP clients — and from ChatGPT through the same API.
+
+The server runs on your own computer: your AI client starts it with `npx`, so it needs **Node.js 18 or newer**. It works in desktop apps, CLIs and code editors, not in web chats such as claude.ai in the browser.
 
 ## Features
 
@@ -39,7 +41,7 @@ Choose your client below and follow the instructions.
 
 ### Claude Desktop
 
-Edit your config file:
+Open **Settings** > **Developer** > **Edit Config**, or edit the file directly:
 
 - **macOS:** `~/Library/Application Support/Claude/claude_desktop_config.json`
 - **Windows:** `%APPDATA%\Claude\claude_desktop_config.json`
@@ -58,25 +60,17 @@ Edit your config file:
 }
 ```
 
-Restart Claude Desktop after saving.
+Quit Claude Desktop completely (Cmd+Q on macOS) and open it again — closing the window is not enough.
 
 ### Claude Code (CLI)
 
-Add to your project's `.claude/settings.json` or global `~/.claude/settings.json`:
+Claude Code registers MCP servers with its own command — it does **not** read `mcpServers` from `settings.json`:
 
-```json
-{
-  "mcpServers": {
-    "anroagents": {
-      "command": "npx",
-      "args": ["-y", "@anroagents/mcp-server"],
-      "env": {
-        "ANROAGENTS_TOKEN": "pat_your_token_here"
-      }
-    }
-  }
-}
+```bash
+claude mcp add anroagents --scope user -e ANROAGENTS_TOKEN=pat_your_token_here -- npx -y @anroagents/mcp-server
 ```
+
+`--scope user` makes it available in every project. Check with `claude mcp list`. To share it with a team through the repository instead, put the same `mcpServers` block as for Claude Desktop into `.mcp.json` at the project root (and keep the token out of git).
 
 ### Cursor
 
@@ -120,25 +114,33 @@ Add to your MCP configuration:
 }
 ```
 
-### ChatGPT (Custom GPTs)
+### Gemini CLI
 
-ChatGPT doesn't support MCP, but you can use our OpenAPI-compatible API:
+Add to `~/.gemini/settings.json`:
 
-1. Create a **Custom GPT** at [chat.openai.com](https://chat.openai.com)
+```json
+{
+  "mcpServers": {
+    "anroagents": {
+      "command": "npx",
+      "args": ["-y", "@anroagents/mcp-server"],
+      "env": {
+        "ANROAGENTS_TOKEN": "pat_your_token_here"
+      }
+    }
+  }
+}
+```
+
+### ChatGPT (Custom GPT Actions)
+
+ChatGPT cannot start a local MCP server like this one. Instead, point a Custom GPT at the same API through its OpenAPI spec:
+
+1. Create a **Custom GPT** at [chatgpt.com](https://chatgpt.com)
 2. Go to **Configure** > **Actions** > **Import from URL**
 3. Enter: `https://api.anroagents.com/mcp/openapi.json`
-4. Set **Authentication**: API Key
-   - **Header:** `Authorization`
-   - **Value:** `Bearer pat_your_token_here`
+4. Set **Authentication**: API Key, auth type **Bearer**, value `pat_your_token_here`
 5. Save and test
-
-### Gemini (Extensions)
-
-Use the same OpenAPI endpoint:
-
-1. Open Google AI Studio or Gemini settings
-2. Add a custom extension with URL: `https://api.anroagents.com/mcp/openapi.json`
-3. Set Bearer authentication with your PAT token
 
 ---
 
@@ -148,6 +150,19 @@ Use the same OpenAPI endpoint:
 |----------|----------|-------------|
 | `ANROAGENTS_TOKEN` | Yes | Personal Access Token (`pat_...`) |
 | `ANROAGENTS_API_URL` | No | API base URL (default: `https://api.anroagents.com`) |
+
+---
+
+## Troubleshooting
+
+If your client shows the server as **failed** or **disconnected**, the cause is almost always on your computer, not in your AnroAgents account:
+
+- **`npx: command not found` / `spawn npx ENOENT`** — Node.js is missing or the app can't see it. Install Node.js 18+ from [nodejs.org](https://nodejs.org). If you installed it with nvm or Homebrew, GUI apps may not see it: set `"command"` to the full path from `which npx`.
+- **`ANROAGENTS_TOKEN environment variable is required`** — the `env` block is missing or misspelled in the config.
+- **`HTTP 401` or `HTTP 403` on every tool call** — the token was deleted or mistyped. A token is shown only once; create a new one in **Settings** > **API Tokens** and paste it into the config.
+- **Logs** — Claude Desktop writes the reason to `~/Library/Logs/Claude/mcp-server-anroagents.log` (macOS) or `%APPDATA%\Claude\logs\mcp-server-anroagents.log` (Windows).
+
+Connection instructions are also always available in the dashboard under **Settings** > **API Tokens** > **How to connect an AI assistant**.
 
 ---
 
