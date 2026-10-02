@@ -20,6 +20,7 @@ export interface Agent {
   restrictions: string;
   bookingUrl?: string;
   calendarEnabled?: boolean;
+  attachmentsEnabled?: boolean;
   services: Array<{
     id: string;
     name: string;

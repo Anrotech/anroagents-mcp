@@ -19,6 +19,9 @@ The server runs on your own computer: your AI client starts it with `npx`, so it
 | `submit-agent-for-review` | Submit agent for moderation and catalog listing |
 | `toggle-agent` | Enable or disable an active agent |
 | `set-agent-logo` | Upload a logo (local file or image URL) and attach it to an agent |
+| `list-knowledge` | List an agent's knowledge sources and their status |
+| `add-website-knowledge` | Add a whole website to an agent's knowledge base |
+| `resync-knowledge` | Read a knowledge source (e.g. a website) again |
 | `get-embed-code` | Get HTML widget embed code for any website |
 | `regenerate-agent-key` | Regenerate the agent's API key |
 
@@ -197,6 +200,7 @@ Create a new AI agent. The agent starts in `draft` status.
 - `escalationRules` (optional): When to escalate to a human
 - `restrictions` (optional): Topics the agent should avoid
 - `bookingUrl` (optional): Online booking URL
+- `attachmentsEnabled` (optional): Let visitors send photos (the agent sees them) and files in chat — Starter plan or higher
 - `services` (optional): Array of `{ name, price, description }`
 - `contacts` (optional): `{ website, email, phone, address }`
 - `faq` (optional): Array of `{ question, answer }`
@@ -237,6 +241,29 @@ Upload a logo image and attach it to an agent. Provide **either** a local file o
 - `filePath` (optional): Absolute path to a local image file. Use this **or** `imageUrl`.
 - `imageUrl` (optional): Public URL of an image to fetch. Use this **or** `filePath`.
 
+### list-knowledge
+
+List an agent's knowledge base sources — uploaded files, pages and whole websites — with their status (`pending`, `processing`, `ready`, `error`), page counts for websites, and the plan limits.
+
+**Parameters:**
+- `agentId` (required): The agent's unique ID
+
+### add-website-knowledge
+
+Add a whole website to the agent's knowledge base. The pages are read in the background within the plan's page and character budgets, and the site becomes one knowledge source. It starts as `pending`; use `list-knowledge` to see when it is `ready`. Addresses on internal networks are refused, and each site can be added once — use `resync-knowledge` to read it again.
+
+**Parameters:**
+- `agentId` (required): The agent's unique ID
+- `url` (required): Website address, e.g. `https://example.com` or `example.com`
+
+### resync-knowledge
+
+Read a knowledge source again: a website is crawled again from the web, a file is re-indexed.
+
+**Parameters:**
+- `agentId` (required): The agent's unique ID
+- `fileId` (required): The source ID from `list-knowledge`
+
 ### get-embed-code
 
 Get the HTML snippet to embed the chat widget on any website.
@@ -263,6 +290,8 @@ Once configured, you can ask your AI assistant things like:
 - "Add a FAQ to my agent: Q: Do you deliver? A: Yes, within 5 miles"
 - "What's the embed code for my Mario's Pizza agent?"
 - "Set the logo for my Mario's Pizza agent from ~/Downloads/logo.png"
+- "Teach my Mario's Pizza agent everything on mariospizza.com"
+- "Let visitors send photos to my carpentry agent"
 - "Disable my test agent"
 - "Delete my draft agent"
 
