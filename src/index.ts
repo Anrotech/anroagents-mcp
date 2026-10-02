@@ -4,6 +4,7 @@ import { AnroAgentsClient } from './api-client.js';
 import { registerAgentTools } from './tools/agents.js';
 import { registerActionTools } from './tools/actions.js';
 import { registerLogoTools } from './tools/logo.js';
+import { registerKnowledgeTools } from './tools/knowledge.js';
 
 export function createServer(token: string, apiUrl?: string): McpServer {
   const client = new AnroAgentsClient(token, apiUrl);
@@ -16,6 +17,7 @@ export function createServer(token: string, apiUrl?: string): McpServer {
   registerAgentTools(server, client);
   registerActionTools(server, client);
   registerLogoTools(server, client);
+  registerKnowledgeTools(server, client);
 
   return server;
 }

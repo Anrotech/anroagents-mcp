@@ -67,6 +67,18 @@ export class AnroAgentsClient {
     return this.request<{ apiKey: string }>('POST', `/agents/${agentId}/regenerate-key`);
   }
 
+  async listKnowledge(agentId: string) {
+    return this.request('GET', `/agents/${agentId}/knowledge`);
+  }
+
+  async addWebsiteKnowledge(agentId: string, url: string) {
+    return this.request<{ fileId: string }>('POST', `/agents/${agentId}/knowledge/site`, { url });
+  }
+
+  async reindexKnowledge(agentId: string, fileId: string) {
+    return this.request<{ reindexed: boolean }>('POST', `/agents/${agentId}/knowledge/${fileId}/reindex`);
+  }
+
   /** Ask the API for a presigned S3 URL to upload an asset (e.g. a logo). */
   async createUpload(data: { fileName: string; contentType: string; fileSize?: number }) {
     return this.request<{ uploadUrl: string; key: string }>('POST', '/uploads', data);
