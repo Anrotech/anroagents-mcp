@@ -201,6 +201,7 @@ Create a new AI agent. The agent starts in `draft` status.
 - `restrictions` (optional): Topics the agent should avoid
 - `bookingUrl` (optional): Online booking URL
 - `attachmentsEnabled` (optional): Let visitors send photos (the agent sees them) and files in chat — Starter plan or higher
+- `chatModel` (optional): `standard` (default) or `advanced` — the advanced model writes better sales conversations; each advanced reply counts as 15 messages against the monthly plan limit. Starter plan or higher
 - `services` (optional): Array of `{ name, price, description }`
 - `contacts` (optional): `{ website, email, phone, address }`
 - `faq` (optional): Array of `{ question, answer }`
