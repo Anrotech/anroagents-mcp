@@ -145,6 +145,7 @@ export function registerAgentTools(server: McpServer, client: AnroAgentsClient) 
       restrictions: z.string().optional().describe('Topics or actions the agent should avoid'),
       bookingUrl: z.string().optional().describe('URL for online booking'),
       attachmentsEnabled: z.boolean().optional().describe('Let visitors send photos (the agent sees them) and files in chat. Starter plan or higher. Defaults to false.'),
+      chatModel: z.enum(['standard', 'advanced']).optional().describe('Model that writes replies to visitors. "standard" (default) or "advanced" — better sales conversations, each reply counts as 15 messages against the monthly plan limit. Advanced needs the Starter plan or higher.'),
       claimable: z.boolean().optional().describe('Admin only. When true, shows a "Claim agent" button on the public chat page so a prospect can take over this demo agent (it transfers to their account). Defaults to false.'),
       services: z.array(z.object({
         name: z.string(),
@@ -190,6 +191,7 @@ export function registerAgentTools(server: McpServer, client: AnroAgentsClient) 
       restrictions: z.string().optional(),
       bookingUrl: z.string().optional(),
       attachmentsEnabled: z.boolean().optional().describe('Turn visitor photo and file uploads in chat on or off. Turning on needs the Starter plan or higher.'),
+      chatModel: z.enum(['standard', 'advanced']).optional().describe('Switch the reply model: "standard" or "advanced" (each advanced reply counts as 15 messages; Starter plan or higher).'),
       claimable: z.boolean().optional().describe('Admin only. Toggle whether this agent is claimable from the public chat page.'),
       services: z.array(z.object({
         name: z.string(),
